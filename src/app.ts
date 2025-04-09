@@ -22,7 +22,7 @@ app.get("/", async (req: Request, res: Response) => {
 
 // src/app.ts
 
-app.use("/api/v1/", allRoutes);
+app.use("/api/v1", allRoutes);
 
 // Handle Route not found
 app.use((req: Request, res: Response, next: NextFunction) => {

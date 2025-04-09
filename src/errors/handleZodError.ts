@@ -12,7 +12,7 @@ const handleZodError = (error: ZodError): IGenericErrorResponse => {
   const statusCode = 400;
   return {
     statusCode,
-    message: "Zod Validatoin Error",
+    message: errors.map(e => e.message).join(". "),
     errorsMessages: errors,
   };
 };
