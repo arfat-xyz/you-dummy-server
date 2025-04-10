@@ -5,7 +5,12 @@ import httpStatus from "http-status";
 import globalErrorHandler from "./app/middlewares/globalErrorHandler";
 import allRoutes from "./app/routes/index";
 const app: Application = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000", // Allow only Next.js frontend
+    credentials: true, // Allow cookies in cross-origin requests
+  }),
+);
 
 // parser
 app.use(express.json());

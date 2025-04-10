@@ -25,5 +25,9 @@ const createUser = z.object({
   email: z.string().email({ message: "Invalid email address" }),
   password: passwordSchema,
 });
+const login = z.object({
+  email: z.string().email({ message: "Invalid email address" }),
+  password: passwordSchema,
+});
 
-export const userZodSchema = { createUser };
+export const userZodSchema = { createUser, login };

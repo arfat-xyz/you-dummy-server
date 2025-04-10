@@ -11,7 +11,7 @@ export type ICourse = {
 export type IUser = {
   password: string;
   picture: string;
-  role: string[];
+  role: ["Subscriber" | "Instructor" | "Admin"];
   stripe_account_id: string;
   stripe_seller: Record<string, unknown>;
   stripeSession: Record<string, unknown>;
@@ -23,4 +23,7 @@ export type IUser = {
   courses: mongoose.Types.ObjectId[]; // Reference to courses
 };
 
+export type IUserWithToken = IUser & {
+  token: string;
+};
 export type IUserModel = Model<IUser>;

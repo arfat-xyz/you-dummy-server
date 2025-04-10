@@ -11,4 +11,5 @@ export const config = {
   db_url: process.env.DATABASE_URL,
   env: process.env.NODE_ENV,
   bcryptSaltRound: process.env.BCRYPT_SALT_ROUND,
+  jwtSecret: process.env.JWT_SECRET,
 };
