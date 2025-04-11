@@ -2,12 +2,17 @@ import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { config } from "../../../config";
 import ApiError from "../../../errors/ApiError";
+import { generateShortCode } from "../../../utils/generate-short-code";
 import { sendEmailViaNodemailer } from "../../../utils/nodemailer";
 import { resetPasswordTemplate } from "../../../utils/templates";
 import { ITokenUser } from "./auth-interface";
 import { UserModel } from "./auth-schema";
 import { comparePassword, hashPassword } from "./auth-utils";
-import { userZodSchema } from "./auth-zod-validation";
+import {
+  IForgetPasswordEmailValidation,
+  IResetPassword,
+  userZodSchema,
+} from "./auth-zod-validation";
 type CreateUserInput = z.infer<typeof userZodSchema.createUser>;
 type LoginUserInput = z.infer<typeof userZodSchema.login>;
 const createUser = async (payload: CreateUserInput) => {
@@ -69,13 +74,57 @@ const getCurrentUser = async (payload: ITokenUser | null) => {
 const sendTestEmail = async () => {
   sendEmailViaNodemailer({
     subject: "Reset Password",
-    template: resetPasswordTemplate(),
+    template: resetPasswordTemplate("asdfasfsadf"),
   });
   return true;
+};
+const forgetPassword = async (payload: IForgetPasswordEmailValidation) => {
+  const { email } = payload;
+
+  const shortCode = generateShortCode(7).toUpperCase();
+  const user = await UserModel.findOneAndUpdate(
+    { email },
+    {
+      passwordResetCode: shortCode,
+    },
+  );
+  if (!user) throw new ApiError(400, "User not found");
+  const { message, success } = await sendEmailViaNodemailer({
+    template: resetPasswordTemplate(shortCode),
+    subject: "Reset Password",
+    to: [user?.email],
+  });
+  if (!success) {
+    throw new ApiError(400, message);
+  }
+  return message;
+};
+const resetPassword = async (payload: IResetPassword) => {
+  const { email, code, newPassword } = payload;
+
+  const user = await UserModel.findOne({
+    email,
+  }).lean();
+  const hashedPassword = await hashPassword(newPassword!);
+  if (!user?.passwordResetCode || user?.passwordResetCode !== code)
+    throw new ApiError(400, "message");
+  const updatedUser = UserModel.findOneAndUpdate(
+    {
+      email,
+      passwordResetCode: code,
+    },
+    {
+      password: hashedPassword,
+      passwordResetCode: "",
+    },
+  ).exec();
+  return updatedUser;
 };
 export const AuthService = {
   createUser,
   loginUser,
   getCurrentUser,
   sendTestEmail,
+  forgetPassword,
+  resetPassword,
 };

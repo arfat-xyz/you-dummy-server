@@ -20,4 +20,14 @@ router.get("/logout", AuthController.logoutUser);
 router.get("/current-user", requireSignin, AuthController.currentUser);
 router.get("/send-test-email", AuthController.sendTestEmail);
 
+router.post(
+  "/forgot-password",
+  zodValidateRequest(userZodSchema.forgetPasswordEmailValidation),
+  AuthController.forgetPassword,
+);
+router.post(
+  "/reset-password",
+  zodValidateRequest(userZodSchema.resetPassword),
+  AuthController.resetPassword,
+);
 export const AuthRouter = router;

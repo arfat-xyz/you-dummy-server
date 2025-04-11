@@ -58,10 +58,30 @@ const sendTestEmail = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+const forgetPassword = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthService.forgetPassword(req.body);
+  sendResponse<string>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: `Check your email for the secret code`,
+    data: result,
+  });
+});
+const resetPassword = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthService.resetPassword(req.body);
+  sendResponse<IUser>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: `Great! Now you can login with your new password`,
+    data: result,
+  });
+});
 export const AuthController = {
   createUser,
   loginUser,
   logoutUser,
   currentUser,
   sendTestEmail,
+  forgetPassword,
+  resetPassword,
 };

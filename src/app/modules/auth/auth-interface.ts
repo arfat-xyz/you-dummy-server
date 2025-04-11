@@ -17,9 +17,7 @@ export type IUser = {
   stripeSession: Record<string, unknown>;
   name: string;
   email: string;
-  passwordResetCode: {
-    data: string;
-  };
+  passwordResetCode: string;
   courses: mongoose.Types.ObjectId[]; // Reference to courses
 };
 export type ITokenUser = {

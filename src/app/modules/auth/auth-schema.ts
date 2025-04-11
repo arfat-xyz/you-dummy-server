@@ -45,10 +45,8 @@ const userSchema = new Schema<IUser>(
       required: true,
     },
     passwordResetCode: {
-      data: {
-        type: String,
-        default: "",
-      },
+      type: String,
+      default: "",
     },
     courses: [
       {

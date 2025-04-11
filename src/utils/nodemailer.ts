@@ -1,5 +1,6 @@
 import nodeMailer from "nodemailer";
 import { MailOptions } from "nodemailer/lib/json-transport";
+import ApiError from "../errors/ApiError";
 
 const transporter = nodeMailer.createTransport({
   service: "Gmail",
@@ -9,7 +10,7 @@ const transporter = nodeMailer.createTransport({
   },
 });
 
-export const sendEmailViaNodemailer = ({
+export const sendEmailViaNodemailer = async ({
   template,
   subject,
   from = process.env.GMAIL_EMAIL as string,
@@ -19,7 +20,7 @@ export const sendEmailViaNodemailer = ({
   subject: string;
   from?: string;
   to?: string[];
-}) => {
+}): Promise<{ success: boolean; message: string }> => {
   const mailOption: MailOptions = {
     from: `Arfatur Rahman <${from}>`,
     to,
@@ -27,11 +28,19 @@ export const sendEmailViaNodemailer = ({
     html: template,
     replyTo: from,
   };
-  transporter.sendMail(mailOption, function (error) {
-    if (error) {
-      console.log("Nodemailer Error", error);
-    } else {
-      console.log(`Message sent successfully`);
-    }
-  });
+
+  try {
+    await transporter.sendMail(mailOption); // Wait for the sendMail to complete
+    console.log(`Message sent successfully`);
+    return {
+      success: true,
+      message: `Message sent successfully`,
+    };
+  } catch (error) {
+    console.log("Nodemailer Error", error);
+    throw new ApiError(
+      400,
+      error instanceof Error ? error?.message : "An unknown error occurred",
+    );
+  }
 };
