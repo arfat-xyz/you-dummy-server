@@ -2,6 +2,9 @@ import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { config } from "../../../config";
 import ApiError from "../../../errors/ApiError";
+import { sendEmailViaNodemailer } from "../../../utils/nodemailer";
+import { resetPasswordTemplate } from "../../../utils/templates";
+import { ITokenUser } from "./auth-interface";
 import { UserModel } from "./auth-schema";
 import { comparePassword, hashPassword } from "./auth-utils";
 import { userZodSchema } from "./auth-zod-validation";
@@ -42,7 +45,7 @@ const loginUser = async (payload: LoginUserInput) => {
 
   // create signed jwt
   const token = jwt.sign(
-    { role: user.role, email: user?.role, name: user?.name },
+    { _id: user?._id, role: user.role, email: user?.role, name: user?.name },
     config.jwtSecret as string,
     {
       expiresIn: "10d",
@@ -50,4 +53,29 @@ const loginUser = async (payload: LoginUserInput) => {
   );
   return { ...user, token };
 };
-export const AuthService = { createUser, loginUser };
+
+const getCurrentUser = async (payload: ITokenUser | null) => {
+  if (!payload?._id) {
+    throw new ApiError(404, "User not found");
+  }
+  const user = await UserModel.findById(payload?._id)
+    .select("-password")
+    .lean();
+  if (!user?._id) {
+    throw new ApiError(404, "User not found");
+  }
+  return user;
+};
+const sendTestEmail = async () => {
+  sendEmailViaNodemailer({
+    subject: "Reset Password",
+    template: resetPasswordTemplate(),
+  });
+  return true;
+};
+export const AuthService = {
+  createUser,
+  loginUser,
+  getCurrentUser,
+  sendTestEmail,
+};

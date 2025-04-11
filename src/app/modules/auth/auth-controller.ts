@@ -40,4 +40,28 @@ const logoutUser = catchAsync(async (req: Request, res: Response) => {
     data: null,
   });
 });
-export const AuthController = { createUser, loginUser, logoutUser };
+const currentUser = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthService.getCurrentUser(req.auth);
+  sendResponse<IUser>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: `User found successfully.`,
+    data: result,
+  });
+});
+const sendTestEmail = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthService.sendTestEmail();
+  sendResponse<boolean>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: `Email send successfully.`,
+    data: result,
+  });
+});
+export const AuthController = {
+  createUser,
+  loginUser,
+  logoutUser,
+  currentUser,
+  sendTestEmail,
+};
