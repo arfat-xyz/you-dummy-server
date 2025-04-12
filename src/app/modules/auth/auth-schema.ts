@@ -14,7 +14,7 @@ const userSchema = new Schema<IUser>(
     },
     picture: {
       type: String,
-      default: "avatar.png",
+      default: "https://i.ibb.co.com/HYf5r66/arfat-rahman-21.jpg",
     },
     role: {
       type: [String],

@@ -1,9 +1,9 @@
 import { SortOrder } from "mongoose";
 
-type IOptions = {
+type ICourseOptions = {
   page?: number;
   limit?: number;
-  sortBy?: "title" | "year" | "code" | "startMonth" | "endMonth" | "createdAt";
+  sortBy?: "name" | "category" | "createdAt";
   sortOrder?: SortOrder;
 };
 
@@ -15,7 +15,7 @@ type IOptionsResult = {
   sortOrder: SortOrder;
 };
 
-const calculatePagination = (options: IOptions): IOptionsResult => {
+const calculatePagination = (options: ICourseOptions): IOptionsResult => {
   const page = Number(options.page) || 1;
   const limit = Number(options.limit) || 10;
   const sortBy = options.sortBy || "createdAt";

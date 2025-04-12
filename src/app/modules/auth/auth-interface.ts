@@ -1,13 +1,5 @@
 import mongoose, { Model } from "mongoose";
 
-// Define the course interface for reference
-export type ICourse = {
-  // Define course fields here, based on what you need
-  title: string;
-  description: string;
-  // add other course fields as needed
-};
-
 export type IUser = {
   password: string;
   picture: string;

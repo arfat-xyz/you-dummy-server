@@ -1,8 +1,9 @@
 // src/app/middlewares/zodValidateRequest.ts
 import { NextFunction, Request, Response } from "express";
-import { AnyZodObject } from "zod";
+import { ZodTypeAny } from "zod";
+
 const zodValidateRequest =
-  (schema: AnyZodObject) =>
+  (schema: ZodTypeAny) =>
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       await schema.parseAsync({
@@ -13,7 +14,7 @@ const zodValidateRequest =
       });
       return next();
     } catch (error) {
-      next(error);
+      next(error); // Optional: custom Zod error formatting middleware
     }
   };
 
