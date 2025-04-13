@@ -1,5 +1,6 @@
 import ApiError from "../../../errors/ApiError";
 import { stripe } from "../../../utils/stripe";
+import { ITokenUser } from "../auth/auth-interface";
 import { UserModel } from "../auth/auth-schema";
 import { ICourseID } from "../course/course-zod-validation";
 import {
@@ -70,9 +71,32 @@ const studentCount = async (payload: ICourseID) => {
     .exec();
   return users;
 };
+const instructorBalance = async (user: ITokenUser | null) => {
+  const dbUser = await UserModel.findById(user?._id).exec();
+  if (!dbUser?._id) {
+    throw new ApiError(409, "User not found");
+  }
+  const balance = await stripe.balance.retrieve({
+    stripeAccount: dbUser.stripe_account_id,
+  });
+  return balance;
+};
+const payoutSettigs = async (user: ITokenUser | null) => {
+  const dbUser = await UserModel.findById(user?._id).exec();
+  if (!dbUser?.stripe_seller?.id) {
+    throw new ApiError(409, "User not found");
+  }
+  const loginLink = await stripe.accounts.createLoginLink(
+    dbUser?.stripe_seller?.id as string,
+    // { redirect_url: process.env.STRIPE_SETTINGS_REDIRECT as string },
+  );
+  return loginLink.url;
+};
 
 export const InstructorService = {
   makeInstructor,
   getAccountStatus,
   studentCount,
+  instructorBalance,
+  payoutSettigs,
 };

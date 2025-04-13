@@ -1,5 +1,8 @@
 import { Router } from "express";
-import { requireSignin } from "../../middlewares/authorization-middleware";
+import {
+  isInstructor,
+  requireSignin,
+} from "../../middlewares/authorization-middleware";
 import zodValidateRequest from "../../middlewares/zodValidateRequest";
 import { CourseZodValidation } from "../course/course-zod-validation";
 import { InstructorController } from "./instructor-controller";
@@ -19,6 +22,20 @@ router.post(
   requireSignin,
   InstructorController.getAccountStatus,
 );
+
+router.get(
+  "/balance",
+  requireSignin,
+  isInstructor,
+  InstructorController.instructorBalance,
+);
+router.get(
+  "/payout-settings",
+  requireSignin,
+  isInstructor,
+  InstructorController.payoutSettigs,
+);
+
 router.post(
   "/student-count",
   zodValidateRequest(CourseZodValidation.courseIdZodValidation),
