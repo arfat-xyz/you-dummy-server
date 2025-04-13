@@ -9,17 +9,11 @@ import handleCastError from "../../errors/handleCastError";
 import handleValidateError from "../../errors/handleValidateError";
 import handleZodError from "../../errors/handleZodError";
 import { IGenericErrorMessage } from "../../interface/errors";
-import { Logger } from "../../shared/logger";
 
 // global error handling
 const globalErrorHandler: ErrorRequestHandler = (error, req, res, next) => {
   //   res.status(400).json({ error: err })
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-  config.env === "development"
-    ? // eslint-disable-next-line no-console
-      console.log("😀 GlobalErrorHandler", error)
-    : Logger.errorLogger.error("😀 GlobalErrorHandler", error);
+  console.log("😀 GlobalErrorHandler", error);
   let statusCode: number = 500;
   let message = "Something went wrong";
   let errorsMessages: IGenericErrorMessage[] = [];
