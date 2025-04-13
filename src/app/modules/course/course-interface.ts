@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { IUser } from "../auth/auth-interface";
 
 // Define the interface for a Lesson
 export type ILesson = {
@@ -19,7 +20,7 @@ export type ICourse = {
   category: string;
   published: boolean;
   paid: boolean;
-  instructor: mongoose.Types.ObjectId;
+  instructor: mongoose.Types.ObjectId | IUser;
   lessons: ILesson[];
 };
 

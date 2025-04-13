@@ -1,12 +1,10 @@
-import importStripe from "stripe";
 import ApiError from "../../../errors/ApiError";
+import { stripe } from "../../../utils/stripe";
 import { UserModel } from "../auth/auth-schema";
 import {
   IInstructorUserProps,
   IMakeInstructorProps,
 } from "./instructor-zod-validation";
-
-const stripe = new importStripe(process.env.STRIPE_SECRET as string);
 
 const makeInstructor = async ({ _id }: IMakeInstructorProps) => {
   // 1.   Find user from db

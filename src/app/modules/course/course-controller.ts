@@ -34,6 +34,18 @@ const freeEnrollment = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+const paidEnrollment = catchAsync(async (req: Request, res: Response) => {
+  const result = await CourseService.paidEnrollment(
+    req.params as ICourseID,
+    req.auth!,
+  );
+  sendResponse<string>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: `Course enrolled successfully.`,
+    data: result,
+  });
+});
 const instructorAllCourses = catchAsync(async (req: Request, res: Response) => {
   const paginationOptions = pick(req.query, paginationFields);
   const result = await CourseService.instructorAllCourses(
@@ -65,8 +77,36 @@ const coursesForAll = catchAsync(async (req: Request, res: Response) => {
     data: result.data,
   });
 });
+const userCourses = catchAsync(async (req: Request, res: Response) => {
+  const paginationOptions = pick(req.query, paginationFields);
+  const result = await CourseService.userCourses(
+    req.query,
+    paginationOptions,
+    req.auth,
+  );
+
+  sendResponse<ICourse[]>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: `Courses found successfully.`,
+    meta: result.meta,
+    data: result.data,
+  });
+});
 const singleCourse = catchAsync(async (req: Request, res: Response) => {
   const result = await CourseService.singleCourse(req?.params?.slug);
+  sendResponse<ICourse>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: `Course created successfully.`,
+    data: result,
+  });
+});
+const userSingleCourse = catchAsync(async (req: Request, res: Response) => {
+  const result = await CourseService.userSingleCourse(
+    req?.params?.slug,
+    req?.auth,
+  );
   sendResponse<ICourse>(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -80,6 +120,18 @@ const checkEnrollment = catchAsync(async (req: Request, res: Response) => {
     req.auth,
   );
   sendResponse<{ status: boolean }>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: `Course created successfully.`,
+    data: result,
+  });
+});
+const stripeSuccess = catchAsync(async (req: Request, res: Response) => {
+  const result = await CourseService.stripeSuccess(
+    req?.params as ICourseID,
+    req.auth,
+  );
+  sendResponse<ICourse>(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: `Course created successfully.`,
@@ -149,12 +201,16 @@ export const CourseController = {
   createCourse,
   instructorAllCourses,
   coursesForAll,
+  userCourses,
   singleCourse,
+  userSingleCourse,
   checkEnrollment,
+  stripeSuccess,
   addLesson,
   updateLesson,
   removeLession,
   updateCourse,
   publishOrUnpublish,
   freeEnrollment,
+  paidEnrollment,
 };

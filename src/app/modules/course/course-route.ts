@@ -23,6 +23,7 @@ router.get(
   CourseController.instructorAllCourses,
 );
 router.get("/courses-for-all", CourseController.coursesForAll);
+router.get("/user-courses", requireSignin, CourseController.userCourses);
 router.post(
   "/create-course",
   zodValidateRequest(CourseZodValidation.createCourse),
@@ -37,12 +38,28 @@ router.post(
   requireSignin,
   CourseController.freeEnrollment,
 );
+router.post(
+  "/paid-enrollment/:courseId",
+  zodValidateRequest(CourseZodValidation.courseIdZodValidation),
+  requireSignin,
+  CourseController.paidEnrollment,
+);
 
 router.get("/single-course/:slug", CourseController.singleCourse);
+router.get(
+  "/user/single-course/:slug",
+  requireSignin,
+  CourseController.userSingleCourse,
+);
 router.get(
   "/check-enrollemnt/:courseId",
   requireSignin,
   CourseController.checkEnrollment,
+);
+router.get(
+  "/stripe-success/:courseId",
+  requireSignin,
+  CourseController.stripeSuccess,
 );
 router.delete(
   "/lesson/:slug/:instructorId/:lessionID",
