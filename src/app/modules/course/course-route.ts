@@ -31,6 +31,24 @@ router.post(
   isInstructor,
   CourseController.createCourse,
 );
+router.post(
+  "/lesson-list-completed",
+  zodValidateRequest(CourseZodValidation.courseIdZodValidation),
+  requireSignin,
+  CourseController.listCompleted,
+);
+router.post(
+  "/lesson-mark-as-completed",
+  zodValidateRequest(CourseZodValidation.courseIdWithLessonId),
+  requireSignin,
+  CourseController.lessonMarkAsCompleted,
+);
+router.post(
+  "/lesson-mark-as-incompleted",
+  zodValidateRequest(CourseZodValidation.courseIdWithLessonId),
+  requireSignin,
+  CourseController.lessonMarkAsIncompleted,
+);
 
 router.post(
   "/free-enrollment/:courseId",

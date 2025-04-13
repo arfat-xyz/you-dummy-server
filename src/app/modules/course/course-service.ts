@@ -12,10 +12,11 @@ import {
   ILesson,
   IRemoveLessionParams,
 } from "./course-interface";
-import { CourseModel } from "./course-schema";
+import { CompletedModel, CourseModel } from "./course-schema";
 import { courseSearchableFields } from "./course-utils";
 import {
   ICourseID,
+  ICourseIDWithLessonID,
   ICreateCourse,
   ILessionCreate,
   ILessionUPdate,
@@ -38,6 +39,61 @@ const createCourse = async (payload: ICreateCourse, instructor: ITokenUser) => {
     instructor: instructor._id,
   }).save();
   return course;
+};
+const listCompleted = async (payload: ICourseID, user: ITokenUser) => {
+  const list = await CompletedModel.findOne({
+    user: user?._id,
+    course: payload?.courseId,
+  }).exec();
+
+  return list?.lessons;
+};
+const lessonMarkAsCompleted = async (
+  payload: ICourseIDWithLessonID,
+  user: ITokenUser,
+) => {
+  const { courseId, lessonId } = payload;
+  // find if user with that course is already created
+  const courseAlreadyEsixtInCompleteList = await CompletedModel.findOne({
+    user: user?._id,
+    course: courseId,
+  }).exec();
+  if (courseAlreadyEsixtInCompleteList?._id) {
+    const updated = await CompletedModel.findOneAndUpdate(
+      {
+        user: user?._id,
+        course: courseId,
+      },
+      {
+        $addToSet: { lessons: lessonId },
+      },
+    ).exec();
+    return updated;
+  } else {
+    const created = await new CompletedModel({
+      user: user?._id,
+      course: courseId,
+      lessons: [lessonId],
+    }).save();
+    return created;
+  }
+};
+const lessonMarkAsIncompleted = async (
+  payload: ICourseIDWithLessonID,
+  user: ITokenUser,
+) => {
+  const { courseId, lessonId } = payload;
+  // find if user with that course is already created
+  const updated = await CompletedModel.findOneAndUpdate(
+    {
+      user: user?._id,
+      course: courseId,
+    },
+    {
+      $pull: { lessons: lessonId },
+    },
+  ).exec();
+  return updated;
 };
 const freeEnrollment = async (payload: ICourseID, user: ITokenUser) => {
   const course = await CourseModel.findById(payload?.courseId).exec();
@@ -520,6 +576,9 @@ const publishOrUnpublish = async (
 
 export const CourseService = {
   createCourse,
+  listCompleted,
+  lessonMarkAsCompleted,
+  lessonMarkAsIncompleted,
   instructorAllCourses,
   coursesForAll,
   userCourses,

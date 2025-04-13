@@ -24,6 +24,14 @@ export type ICourse = {
   lessons: ILesson[];
 };
 
+export type ICompleted = {
+  user: mongoose.Types.ObjectId;
+  course: mongoose.Types.ObjectId;
+  lessons: mongoose.Types.ObjectId[]; // or string[] if lesson IDs are strings
+  createdAt: Date;
+  updatedAt: Date;
+} & Document;
+
 export type ICreateLessionParams = { slug: string; instructorId: string };
 export type IRemoveLessionParams = {
   lessionID: string;
