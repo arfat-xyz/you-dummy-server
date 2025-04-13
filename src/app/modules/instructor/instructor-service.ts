@@ -1,6 +1,7 @@
 import ApiError from "../../../errors/ApiError";
 import { stripe } from "../../../utils/stripe";
 import { UserModel } from "../auth/auth-schema";
+import { ICourseID } from "../course/course-zod-validation";
 import {
   IInstructorUserProps,
   IMakeInstructorProps,
@@ -63,8 +64,15 @@ const getAccountStatus = async (payload: IInstructorUserProps) => {
 
   return statusUpdated;
 };
+const studentCount = async (payload: ICourseID) => {
+  const users = await UserModel.find({ courses: payload?.courseId })
+    // .select("_id")
+    .exec();
+  return users;
+};
 
 export const InstructorService = {
   makeInstructor,
   getAccountStatus,
+  studentCount,
 };

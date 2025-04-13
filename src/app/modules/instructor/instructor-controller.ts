@@ -22,7 +22,17 @@ const getAccountStatus = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+const studentCount = catchAsync(async (req: Request, res: Response) => {
+  const result = await InstructorService.studentCount(req.body);
+  sendResponse<IUser[]>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: `Great! Now you can login with your new password`,
+    data: result,
+  });
+});
 export const InstructorController = {
   makeInstructor,
   getAccountStatus,
+  studentCount,
 };
