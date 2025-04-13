@@ -94,6 +94,17 @@ const updateCourse = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+const publishOrUnpublish = catchAsync(async (req: Request, res: Response) => {
+  const result = await CourseService.publishOrUnpublish(req.body, req.auth!);
+  sendResponse<ICourse>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: result?.published
+      ? `Course publised successfully.`
+      : `Course unpublished successfully.`,
+    data: result,
+  });
+});
 export const CourseController = {
   createCourse,
   instructorAllCourses,
@@ -102,4 +113,5 @@ export const CourseController = {
   updateLesson,
   removeLession,
   updateCourse,
+  publishOrUnpublish,
 };

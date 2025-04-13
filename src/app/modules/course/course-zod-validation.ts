@@ -91,8 +91,13 @@ const updateCourse = z
       message: "Price must be 0.00 if the course is not paid",
     },
   );
+const publishOrUnpublish = z.object({
+  published: booleanValidation("Publish"),
+  courseId: stringValidation("Course ID"),
+});
 export type ICreateCourse = z.infer<typeof createCourse>;
 export type IUpdateCourse = z.infer<typeof updateCourse>;
+export type IPublishOrUnpublish = z.infer<typeof publishOrUnpublish>;
 
 export type ILessionCreate = z.infer<typeof lessionCreateZodValidation>;
 export type ILessionUPdate = z.infer<typeof lessonUpdateZod>;
@@ -102,4 +107,5 @@ export const CourseZodValidation = {
   lessionCreateZodValidation,
   lessonUpdateZod,
   updateCourse,
+  publishOrUnpublish,
 };

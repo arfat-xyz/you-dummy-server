@@ -17,6 +17,7 @@ import {
   ICreateCourse,
   ILessionCreate,
   ILessionUPdate,
+  IPublishOrUnpublish,
   IUpdateCourse,
 } from "./course-zod-validation";
 
@@ -226,6 +227,35 @@ const updateCourse = async (payload: IUpdateCourse, instructor: ITokenUser) => {
   }).exec();
   return updated;
 };
+const publishOrUnpublish = async (
+  payload: IPublishOrUnpublish,
+  instructor: ITokenUser,
+) => {
+  const { courseId, published } = payload;
+  const course = await CourseModel.findById(courseId)
+    .select("instructor")
+    .lean();
+  if (!course) {
+    throw new ApiError(404, "Course not found");
+  }
+
+  if (String(instructor._id) !== String(course.instructor)) {
+    throw new ApiError(403, "Unauthorized");
+  }
+
+  const updatedCourse = await CourseModel.findByIdAndUpdate(
+    courseId,
+    { published },
+    { new: true },
+  )
+    .populate("instructor", "_id name")
+    .exec();
+  if (!updatedCourse) {
+    throw new ApiError(400, "Failed to publish course");
+  }
+
+  return updatedCourse;
+};
 
 export const CourseService = {
   createCourse,
@@ -235,4 +265,5 @@ export const CourseService = {
   updateLesson,
   removeLession,
   updateCourse,
+  publishOrUnpublish,
 };

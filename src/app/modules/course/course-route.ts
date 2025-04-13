@@ -58,5 +58,12 @@ router.post(
   isInstructor,
   CourseController.updateCourse,
 );
+router.put(
+  "/publish-or-unpublish",
+  zodValidateRequest(CourseZodValidation.publishOrUnpublish),
+  requireSignin,
+  isInstructor,
+  CourseController.publishOrUnpublish,
+);
 
 export const CourseRouter = router;
