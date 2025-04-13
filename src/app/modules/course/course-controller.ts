@@ -11,6 +11,7 @@ import {
   IRemoveLessionParams,
 } from "./course-interface";
 import { CourseService } from "./course-service";
+import { ICourseID } from "./course-zod-validation";
 
 const createCourse = catchAsync(async (req: Request, res: Response) => {
   const result = await CourseService.createCourse(req.body, req.auth!);
@@ -18,6 +19,18 @@ const createCourse = catchAsync(async (req: Request, res: Response) => {
     statusCode: httpStatus.OK,
     success: true,
     message: `Course created successfully.`,
+    data: result,
+  });
+});
+const freeEnrollment = catchAsync(async (req: Request, res: Response) => {
+  const result = await CourseService.freeEnrollment(
+    req.params as ICourseID,
+    req.auth!,
+  );
+  sendResponse<ICourse>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: `Course enrolled successfully.`,
     data: result,
   });
 });
@@ -32,7 +45,22 @@ const instructorAllCourses = catchAsync(async (req: Request, res: Response) => {
   sendResponse<ICourse[]>(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: `Course created successfully.`,
+    message: `Courses found successfully.`,
+    meta: result.meta,
+    data: result.data,
+  });
+});
+const coursesForAll = catchAsync(async (req: Request, res: Response) => {
+  const paginationOptions = pick(req.query, paginationFields);
+  const result = await CourseService.coursesForAll(
+    req.query,
+    paginationOptions,
+  );
+
+  sendResponse<ICourse[]>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: `Courses found successfully.`,
     meta: result.meta,
     data: result.data,
   });
@@ -40,6 +68,18 @@ const instructorAllCourses = catchAsync(async (req: Request, res: Response) => {
 const singleCourse = catchAsync(async (req: Request, res: Response) => {
   const result = await CourseService.singleCourse(req?.params?.slug);
   sendResponse<ICourse>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: `Course created successfully.`,
+    data: result,
+  });
+});
+const checkEnrollment = catchAsync(async (req: Request, res: Response) => {
+  const result = await CourseService.checkEnrollment(
+    req?.params as ICourseID,
+    req.auth,
+  );
+  sendResponse<{ status: boolean }>(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: `Course created successfully.`,
@@ -108,10 +148,13 @@ const publishOrUnpublish = catchAsync(async (req: Request, res: Response) => {
 export const CourseController = {
   createCourse,
   instructorAllCourses,
+  coursesForAll,
   singleCourse,
+  checkEnrollment,
   addLesson,
   updateLesson,
   removeLession,
   updateCourse,
   publishOrUnpublish,
+  freeEnrollment,
 };

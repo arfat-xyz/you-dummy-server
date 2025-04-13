@@ -95,9 +95,13 @@ const publishOrUnpublish = z.object({
   published: booleanValidation("Publish"),
   courseId: stringValidation("Course ID"),
 });
+const courseIdZodValidation = z.object({
+  courseId: stringValidation("Course ID"),
+});
 export type ICreateCourse = z.infer<typeof createCourse>;
 export type IUpdateCourse = z.infer<typeof updateCourse>;
 export type IPublishOrUnpublish = z.infer<typeof publishOrUnpublish>;
+export type ICourseID = z.infer<typeof courseIdZodValidation>;
 
 export type ILessionCreate = z.infer<typeof lessionCreateZodValidation>;
 export type ILessionUPdate = z.infer<typeof lessonUpdateZod>;
@@ -108,4 +112,5 @@ export const CourseZodValidation = {
   lessonUpdateZod,
   updateCourse,
   publishOrUnpublish,
+  courseIdZodValidation,
 };

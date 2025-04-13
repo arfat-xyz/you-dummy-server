@@ -14,6 +14,7 @@ import {
 import { CourseModel } from "./course-schema";
 import { courseSearchableFields } from "./course-utils";
 import {
+  ICourseID,
   ICreateCourse,
   ILessionCreate,
   ILessionUPdate,
@@ -35,6 +36,20 @@ const createCourse = async (payload: ICreateCourse, instructor: ITokenUser) => {
     ...payload,
     instructor: instructor._id,
   }).save();
+  return course;
+};
+const freeEnrollment = async (payload: ICourseID, user: ITokenUser) => {
+  const course = await CourseModel.findById(payload?.courseId).exec();
+  if (!course?._id) throw new ApiError(404, "Course not found");
+  if (course?.paid) throw new ApiError(409, "This course is paid");
+
+  await UserModel.findByIdAndUpdate(
+    user?._id,
+    {
+      $addToSet: { courses: course?._id },
+    },
+    { new: true },
+  ).exec();
   return course;
 };
 
@@ -88,6 +103,56 @@ const instructorAllCourses = async (
     data: result,
   };
 };
+const coursesForAll = async (
+  paginationOptions: IPaginationOptions,
+  filters: ICourseFilters,
+) => {
+  const { page, limit, skip, sortBy, sortOrder } =
+    paginationHelpers.calculatePagination(paginationOptions);
+  const { searchTerm, ...filtersFields } = filters;
+  const sortCondition: { [key: string]: SortOrder } = {};
+
+  if (sortBy && sortOrder) {
+    sortCondition[sortBy] = sortOrder;
+  }
+  const andCondition = [];
+  if (searchTerm) {
+    andCondition.push({
+      $or: courseSearchableFields.map(field => ({
+        [field]: {
+          $regex: searchTerm,
+          $options: "i",
+        },
+      })),
+    });
+  }
+
+  if (Object.keys(filtersFields).length) {
+    andCondition.push({
+      $and: Object.entries(filtersFields).map(([field, value]) => ({
+        [field]: value,
+      })),
+    });
+  } // ✅ Add instructor filter
+  andCondition.push({
+    published: true,
+  });
+  const whereCondition = andCondition.length > 0 ? { $and: andCondition } : {};
+  const result = await CourseModel.find(whereCondition)
+    .sort(sortCondition)
+    .skip(skip)
+    .populate("instructor", "_id name")
+    .limit(limit);
+  const total = await CourseModel.countDocuments(whereCondition);
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+    },
+    data: result,
+  };
+};
 const singleCourse = async (slug: string) => {
   if (!slug) throw new ApiError(404, "Slug is requried");
   const course = await CourseModel.findOne({ slug })
@@ -96,10 +161,27 @@ const singleCourse = async (slug: string) => {
   if (!course?._id) throw new ApiError(404, "Course not found");
   return course;
 };
+const checkEnrollment = async (
+  { courseId }: ICourseID,
+  auth: ITokenUser | null,
+) => {
+  if (!auth?._id) {
+    throw new Error("Unauthorized or invalid user.");
+  }
+
+  // find courses of the currently logged in user
+  const user = await UserModel.findById(auth._id).exec();
+  const ids: string[] =
+    user?.courses?.map(courseId => courseId.toString()) || [];
+  return {
+    status: ids.includes(courseId),
+  };
+};
+
 const addLesson = async (
   params: ICreateLessionParams,
   payload: ILessionCreate,
-  auth?: ITokenUser | null,
+  auth: ITokenUser | null,
 ) => {
   const { slug, instructorId } = params;
   const { title, content, video } = payload;
@@ -260,7 +342,10 @@ const publishOrUnpublish = async (
 export const CourseService = {
   createCourse,
   instructorAllCourses,
+  coursesForAll,
   singleCourse,
+  freeEnrollment,
+  checkEnrollment,
   addLesson,
   updateLesson,
   removeLession,
