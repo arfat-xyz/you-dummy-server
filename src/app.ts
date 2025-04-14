@@ -8,7 +8,11 @@ import allRoutes from "./app/routes/index";
 const app: Application = express();
 app.use(
   cors({
-    origin: "http://localhost:3000", // Allow only Next.js frontend
+    origin: [
+      "http://localhost:3000",
+      "https://you-dummy-client.vercel.app",
+      "https://u-dummy.netlify.app",
+    ], // Allow only Next.js frontend
     credentials: true, // Allow cookies in cross-origin requests
   }),
 );

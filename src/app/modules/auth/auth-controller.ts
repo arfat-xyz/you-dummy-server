@@ -21,7 +21,21 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
   //  send token in cookie
   res.cookie("token", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production", // HTTPS-only in production
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: process.env.NODE_ENV === "production", // only secure in prod
+    maxAge: 1000 * 60 * 60,
+  });
+  res.cookie("final-version", token, {
+    httpOnly: true,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: process.env.NODE_ENV === "production", // only secure in prod
+    maxAge: 1000 * 60 * 60,
+  });
+  res.cookie("__final-version", token, {
+    httpOnly: true,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: process.env.NODE_ENV === "production", // only secure in prod
+    maxAge: 1000 * 60 * 60,
   });
   sendResponse<IUser>(res, {
     statusCode: httpStatus.OK,
