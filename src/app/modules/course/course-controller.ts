@@ -11,6 +11,7 @@ import {
   ICreateLessionParams,
   ILesson,
   IRemoveLessionParams,
+  IReview,
 } from "./course-interface";
 import { CourseService } from "./course-service";
 import { ICourseID } from "./course-zod-validation";
@@ -237,10 +238,24 @@ const publishOrUnpublish = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+const createReview = catchAsync(async (req: Request, res: Response) => {
+  const result = await CourseService.createReview(
+    req.body,
+    req.params as ICourseID,
+    req.auth!,
+  );
+  sendResponse<IReview>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "review submitted",
+    data: result,
+  });
+});
 export const CourseController = {
   createCourse,
   listCompleted,
-  lessonMarkAsCompleted,lessonMarkAsIncompleted,
+  lessonMarkAsCompleted,
+  lessonMarkAsIncompleted,
   instructorAllCourses,
   coursesForAll,
   userCourses,
@@ -255,4 +270,5 @@ export const CourseController = {
   publishOrUnpublish,
   freeEnrollment,
   paidEnrollment,
+  createReview,
 };

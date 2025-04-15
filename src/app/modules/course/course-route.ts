@@ -115,5 +115,11 @@ router.put(
   isInstructor,
   CourseController.publishOrUnpublish,
 );
+router.post(
+  "/review/:courseId",
+  zodValidateRequest(CourseZodValidation.reviewWithCourseIdValidationSchema),
+  requireSignin,
+  CourseController.createReview,
+);
 
 export const CourseRouter = router;

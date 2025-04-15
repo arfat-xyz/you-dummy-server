@@ -1,5 +1,5 @@
 import mongoose, { Model, Schema } from "mongoose";
-import { ICompleted, ICourse, ILesson } from "./course-interface";
+import { ICompleted, ICourse, ILesson, IReview } from "./course-interface";
 
 // Define the schema for a Lesson
 const lessonSchema = new Schema<ILesson>(
@@ -99,7 +99,32 @@ const CompletedSchema: Schema<ICompleted> = new Schema(
     timestamps: true,
   },
 );
-
+// Create a new schema
+const reviewSchema = new Schema<IReview>(
+  {
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    course: {
+      type: Schema.Types.ObjectId,
+      ref: "Course",
+      required: true,
+    },
+    rating: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 5,
+    },
+    comment: {
+      type: String,
+      required: true,
+    },
+  },
+  { timestamps: true },
+);
 export const CompletedModel: Model<ICompleted> =
   mongoose.models.Completed ||
   mongoose.model<ICompleted>("Completed", CompletedSchema);
@@ -108,4 +133,8 @@ export const CompletedModel: Model<ICompleted> =
 export const CourseModel: Model<ICourse> = mongoose.model<ICourse>(
   "Course",
   courseSchema,
+);
+export const ReviewModel: Model<IReview> = mongoose.model<IReview>(
+  "Riview",
+  reviewSchema,
 );

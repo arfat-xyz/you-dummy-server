@@ -13,7 +13,7 @@ import { IGenericErrorMessage } from "../../interface/errors";
 // global error handling
 const globalErrorHandler: ErrorRequestHandler = (error, req, res, next) => {
   //   res.status(400).json({ error: err })
-  console.log("😀 GlobalErrorHandler", error);
+  console.log("😀 GlobalErrorHandler", `\n route : ${req.url} \n`, error);
   let statusCode: number = 500;
   let message = "Something went wrong";
   let errorsMessages: IGenericErrorMessage[] = [];

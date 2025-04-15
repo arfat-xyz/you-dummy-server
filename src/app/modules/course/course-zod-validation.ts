@@ -102,6 +102,22 @@ const courseIdZodValidation = z.object({
 const courseIdWithLessonId = courseIdZodValidation.extend({
   lessonId: stringValidation("Lesson ID"),
 });
+
+export const reviewValidationSchema = z.object({
+  user: stringValidation("User as ID"),
+  rating: z
+    .number()
+    .min(1, "Rating must be at least 1")
+    .max(5, "Rating cannot exceed 5"),
+  comment: stringValidation("Comment")
+    .min(10, "Comment must be at least 10 characters")
+    .max(500, "Comment cannot exceed 500 characters"),
+  course: stringValidation("Course as ID").optional(),
+});
+// Combined schema for when you need both review data and course ID
+export const reviewWithCourseIdValidationSchema = reviewValidationSchema.merge(
+  courseIdZodValidation,
+);
 export type ICreateCourse = z.infer<typeof createCourse>;
 export type IUpdateCourse = z.infer<typeof updateCourse>;
 export type IPublishOrUnpublish = z.infer<typeof publishOrUnpublish>;
@@ -119,4 +135,6 @@ export const CourseZodValidation = {
   publishOrUnpublish,
   courseIdZodValidation,
   courseIdWithLessonId,
+  reviewValidationSchema,
+  reviewWithCourseIdValidationSchema,
 };

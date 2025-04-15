@@ -23,6 +23,13 @@ export type ICourse = {
   instructor: mongoose.Types.ObjectId | IUser;
   lessons: ILesson[];
 };
+export type IReview = {
+  user: mongoose.Types.ObjectId | IUser;
+  name: string;
+  rating: number;
+  comment: string;
+  course: mongoose.Types.ObjectId | ICourse;
+};
 
 export type ICompleted = {
   user: mongoose.Types.ObjectId;

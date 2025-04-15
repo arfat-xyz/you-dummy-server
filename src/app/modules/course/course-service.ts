@@ -1,4 +1,4 @@
-import { SortOrder } from "mongoose";
+import mongoose, { SortOrder } from "mongoose";
 import slugify from "slugify";
 import ApiError from "../../../errors/ApiError";
 import { paginationHelpers } from "../../../helpers/paginationHelpers";
@@ -11,8 +11,9 @@ import {
   ICreateLessionParams,
   ILesson,
   IRemoveLessionParams,
+  IReview,
 } from "./course-interface";
-import { CompletedModel, CourseModel } from "./course-schema";
+import { CompletedModel, CourseModel, ReviewModel } from "./course-schema";
 import { courseSearchableFields } from "./course-utils";
 import {
   ICourseID,
@@ -225,7 +226,9 @@ const coursesForAll = async (
   if (sortBy && sortOrder) {
     sortCondition[sortBy] = sortOrder;
   }
+
   const andCondition = [];
+
   if (searchTerm) {
     andCondition.push({
       $or: courseSearchableFields.map(field => ({
@@ -243,26 +246,70 @@ const coursesForAll = async (
         [field]: value,
       })),
     });
-  } // ✅ Add instructor filter
-  andCondition.push({
-    published: true,
-  });
+  }
+
+  andCondition.push({ published: true });
+
   const whereCondition = andCondition.length > 0 ? { $and: andCondition } : {};
-  const result = await CourseModel.find(whereCondition)
+
+  // Step 1: Fetch paginated courses
+  const courses = await CourseModel.find(whereCondition)
     .sort(sortCondition)
     .skip(skip)
+    .limit(limit)
     .populate("instructor", "_id name")
-    .limit(limit);
+    .lean();
+
+  // Step 2: Get average ratings and number of ratings grouped by course
+  const courseIds = courses.map(course => course._id);
+  const ratings = await ReviewModel.aggregate([
+    { $match: { course: { $in: courseIds } } },
+    {
+      $group: {
+        _id: "$course",
+        averageRating: { $avg: "$rating" },
+        numberOfRatings: { $sum: 1 },
+      },
+    },
+  ]);
+
+  // Step 3: Map courseId => rating data
+  const ratingMap = new Map(
+    ratings.map(r => [
+      r._id.toString(),
+      {
+        averageRating: r.averageRating,
+        numberOfRatings: r.numberOfRatings,
+      },
+    ]),
+  );
+
+  // Step 4: Attach averageRating + numberOfRatings to each course
+  const coursesWithRatings = courses.map(course => {
+    const ratingInfo = ratingMap.get(course._id.toString()) || {
+      averageRating: 0,
+      numberOfRatings: 0,
+    };
+    return {
+      ...course,
+      averageRating: ratingInfo.averageRating,
+      numberOfRatings: ratingInfo.numberOfRatings,
+    };
+  });
+
+  // Step 5: Total count for pagination
   const total = await CourseModel.countDocuments(whereCondition);
+
   return {
     meta: {
       page,
       limit,
       total,
     },
-    data: result,
+    data: coursesWithRatings,
   };
 };
+
 const userCourses = async (
   paginationOptions: IPaginationOptions,
   filters: ICourseFilters,
@@ -333,24 +380,33 @@ const singleCourse = async (slug: string) => {
   if (!slug) throw new ApiError(404, "Slug is requried");
   const course = await CourseModel.findOne({ slug })
     .populate("instructor", "_id name")
-    .exec();
+    .lean();
+  const reviews = await ReviewModel.find({
+    course: course?._id,
+  })
+    .populate("user", "name picture")
+    .lean();
   if (!course?._id) throw new ApiError(404, "Course not found");
-  return course;
+  console.log({ reviews: reviews[0].user });
+  return { ...course, reviews };
 };
 const userSingleCourse = async (slug: string, user: ITokenUser | null) => {
   if (!slug) throw new ApiError(404, "Slug is requried");
 
   const course = await CourseModel.findOne({ slug })
     .populate("instructor", "_id name")
-    .exec();
+    .lean();
   if (!course?._id) throw new ApiError(404, "Course not found");
 
   const dbUser = await UserModel.findById(user?._id).exec();
   if (!dbUser?.courses.includes(course?._id)) {
     throw new ApiError(403, "You're not authorized");
   }
-
-  return course;
+  const existCourseReview = await ReviewModel.exists({
+    course: course?._id,
+    user: user?._id,
+  });
+  return { ...course, userAlreadyReviewd: !!existCourseReview?._id };
 };
 const checkEnrollment = async (
   { courseId }: ICourseID,
@@ -506,8 +562,6 @@ const removeLession = async (
   return updatedCourse.lessons;
 };
 
-import mongoose from "mongoose";
-
 const updateCourse = async (payload: IUpdateCourse, instructor: ITokenUser) => {
   payload.slug = slugify(payload.slug);
   const course = await CourseModel.findById(payload?.id).exec();
@@ -573,6 +627,34 @@ const publishOrUnpublish = async (
 
   return updatedCourse;
 };
+const createReview = async (
+  payload: IReview,
+  params: ICourseID,
+  user: ITokenUser,
+) => {
+  const { courseId } = params;
+  const userExist = await UserModel.findById(user?._id)
+    .select("courses")
+    .exec();
+  if (
+    !userExist?._id ||
+    !userExist?.courses.includes(new mongoose.Types.ObjectId(courseId))
+  ) {
+    throw new ApiError(400, "Unauthorized");
+  }
+  const existCourseReview = await ReviewModel.findOne({
+    course: courseId,
+    user: user?._id,
+  });
+  if (existCourseReview) throw new ApiError(403, "Already reviewed");
+  const created = await new ReviewModel({
+    user: user?._id,
+    course: courseId,
+    comment: payload.comment,
+    rating: payload.rating,
+  }).save();
+  return created;
+};
 
 export const CourseService = {
   createCourse,
@@ -593,4 +675,5 @@ export const CourseService = {
   removeLession,
   updateCourse,
   publishOrUnpublish,
+  createReview,
 };
