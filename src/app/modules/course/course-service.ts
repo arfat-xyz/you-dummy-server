@@ -387,7 +387,6 @@ const singleCourse = async (slug: string) => {
     .populate("user", "name picture")
     .lean();
   if (!course?._id) throw new ApiError(404, "Course not found");
-  console.log({ reviews: reviews[0].user });
   return { ...course, reviews };
 };
 const userSingleCourse = async (slug: string, user: ITokenUser | null) => {
